@@ -1,4 +1,6 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hand Lens Mineral Review</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,7 +100,8 @@ nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)
 .icon-btn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 12px;font-size:13px;color:var(--muted)}
 .icon-btn:hover{color:var(--ink);border-color:var(--muted)}
 main{padding-block:28px 64px}
-section.view{display:grid;gap:22px}
+section.view{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+.bench{grid-template-columns:minmax(0,1fr)}
 
 /* ---------- Library ---------- */
 .lib-head{display:grid;gap:14px}
@@ -264,6 +267,50 @@ button.chip[aria-pressed="false"]{background:transparent;border-color:var(--line
   .qcard,.panel{padding:18px}
   .facts{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 }
+@media (max-width:560px){
+  /* Pinned header: only the tab row stays on screen while scrolling */
+  header.top{top:calc(env(safe-area-inset-top, 0px) - var(--hdr-off, 118px))}
+  .top .wrap{gap:8px;padding-block:8px 6px;min-height:0}
+  .win button{padding:6px 10px}
+  main{padding-block:18px 48px}
+  section.view{gap:16px}
+  .lib-head{gap:8px}
+  .lib-head h1{font-size:28px}
+  .lib-head p{font-size:14px}
+  /* Two compact cards per row */
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .spec{padding:10px;gap:6px}
+  .spec:hover{transform:none}
+  .spec h3{font-size:17px;overflow-wrap:anywhere}
+  .spec .fm{font-size:11px;min-height:0}
+  .spec .no{display:none}
+  .spec .chip,.spec .badge{font-size:10px;padding:2px 7px;white-space:normal}
+  .spec-top{flex-wrap:wrap;gap:4px}
+  .spec .kv{font-size:11px}
+  .xs-hide{display:none!important}
+  /* Filter chips scroll sideways in one line */
+  #clsChips,#yrChips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  #clsChips{margin-inline:-16px;padding-inline:16px}
+  #yrChips{flex:1 1 100%;min-width:0;max-width:100%}
+  #clsChips::-webkit-scrollbar,#yrChips::-webkit-scrollbar{display:none}
+  .chip{flex:none}
+  .tools{gap:8px}
+  .search{flex-basis:100%}
+  .tools select{flex:1 1 0;min-width:0}
+  /* Progress and quiz setup */
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .tile{padding:12px}
+  .tile b{font-size:24px}
+  .types{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .tcheck{font-size:13px;padding:8px 9px;gap:8px;align-items:flex-start}
+  .tcheck input{margin-top:2px;flex:none}
+  .qcard{padding:16px;gap:16px}
+  .opt{padding:12px;font-size:15px}
+  .bar-row{grid-template-columns:minmax(0,110px) 1fr 40px}
+  .result-top{gap:16px}
+  .ring{width:104px;height:104px}
+}
+@media (hover:none){ .kbd-hint{display:none} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body[data-col="trend"]{--accent:var(--acc-trend);--accent-soft:var(--acc-trend-soft)}
 .top .wrap{row-gap:10px}
@@ -892,7 +939,13 @@ function switchCol(col, keepView){
   render(); window.scrollTo(0,0);
 }
 window.addEventListener('hashchange', () => { const c = location.hash==='#trends' ? 'trend' : 'must'; if (c!==S.col) switchCol(c); });
+function setHeaderOffset(){
+  const nav = document.querySelector('nav.tabs'); if (!nav) return;
+  document.documentElement.style.setProperty('--hdr-off', Math.max(0, nav.offsetTop - 6) + 'px');
+}
+window.addEventListener('resize', setHeaderOffset);
 function render(){
+  requestAnimationFrame(setHeaderOffset);
   document.body.dataset.col = S.col;
   document.querySelectorAll('#win button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c===S.col));
   document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.v===S.view));
@@ -951,9 +1004,9 @@ function drawGridM(){
       <h3>${esc(dispName(m))}</h3>
       <div class="fm">${fmtF(m.fm)}</div>
       <div class="mohs">${mohsBar(m)}<div class="kv"><span>Mohs</span><b>${esc(m.h)}</b></div></div>
-      <div class="kv"><span class="streak"><i class="sw" style="background:${streakColor(m.st)}"></i>Streak</span><b>${esc(m.st)}</b></div>
-      <div class="kv"><span>System</span><b>${esc(m.cs)}</b></div>
-      <div class="kv"><span>Past exams</span><b>${t && t.yrs.length ? `${t.yrs.length} of 8 years` : 'Not in trend list'}</b></div>
+      <div class="kv xs-hide"><span class="streak"><i class="sw" style="background:${streakColor(m.st)}"></i>Streak</span><b>${esc(m.st)}</b></div>
+      <div class="kv xs-hide"><span>System</span><b>${esc(m.cs)}</b></div>
+      <div class="kv"><span>Past exams</span><b>${t && t.yrs.length ? `${t.yrs.length} of 8` : 'None'}</b></div>
     </button>`; }).join('') : `<div class="empty">No minerals match “${esc(st.search)}”. Try a formula like CuFeS2 or a variety like emerald.</div>`;
 }
 
@@ -1020,11 +1073,11 @@ function drawGridT(){
       ${HAS_PHOTOS ? photoFrame(m) : ''}
       <div class="spec-top">${chip(m.cls2)}${m.hs ? '<span class="badge">Hand specimen</span>' : `<span class="no">No. ${String(m.no).padStart(3,'0')}</span>`}</div>
       <h3>${esc(m.n)}</h3>
-      ${m.exn.length ? `<div class="aa">Appeared as <b>${esc(m.exn.join(', '))}</b></div>` : ''}
+      ${m.exn.length ? `<div class="aa xs-hide">Appeared as <b>${esc(m.exn.join(', '))}</b></div>` : ''}
       <div class="fm">${fmtF(m.fm)}</div>
-      ${yrStrip(m)}
+      <div class="xs-hide">${yrStrip(m)}</div>
       <div class="kv"><span>Exam years</span><b>${m.yrs.length} of 8</b></div>
-      <div class="kv"><span>Mohs · SG</span><b>${esc(m.h)} · ${esc(m.sg)}</b></div>
+      <div class="kv xs-hide"><span>Mohs · SG</span><b>${esc(m.h)} · ${esc(m.sg)}</b></div>
     </button>`).join('') : `<div class="empty">No exam-trend minerals match these filters.</div>`;
 }
 
@@ -1460,3 +1513,5 @@ if (window.HL_PENDING){ sstore.set('handlens_auth','1'); $('#lockMsg').textConte
 else if (sstore.get('handlens_auth')==='1') unlock();
 else setTimeout(()=>$('#pwIn').focus(), 50);
 </script>
+
+</body></html>

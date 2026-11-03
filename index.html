@@ -722,8 +722,7 @@ const TRIVIA = [
 const TYPES_T = {
   formula:'Formula → mineral', formulaOf:'Mineral → formula', hardness:'Mohs hardness', hardest:'Hardest of four',
   heaviest:'Heaviest of four', luster:'Luster', streak:'Streak', system:'Crystal system', cls:'Mineral class',
-  examName:'Names used in the exam', describe:'Diagnostic features', uses:'Uses & ore of', ph:'Philippine occurrence',
-  asked:'How the board asked', frequent:'Most repeated', year:'Exam year', specimen:'Hand specimens'
+  examName:'Aliases', describe:'Diagnostic features', uses:'Uses & ore of', ph:'Philippine occurrence'
 };
 const qt = (type, ...a) => q(type, TYPES_T[type], ...a);
 const tcls = x => x.cls2;
@@ -802,34 +801,13 @@ const GEN_T = {
     const {a, d} = pick(uniq), na = norm(a);
     const holders = TM.filter(x=>x.aa.some(y=>norm(y)===na) || x.vars.some(v=>norm(v.v)===na));
     const o = owners(t, x=>x.n, TM.filter(x=>!holders.includes(x)), TO()); if (!o) return null;
-    const descr = x => { const al = [...x.exn, ...x.vars.map(v=>v.v)]; return al.length ? `${N(x)} appeared as “${esc(pick(al))}”` : `${N(x)} is ${F(x)}`; };
-    return qt('examName', t, `In the board exam, “<b>${esc(a)}</b>” refers to which mineral?`, esc(t.n), o.map(x=>esc(x.n)),
+    const descr = x => { const al = [...x.exn, ...x.vars.map(v=>v.v)]; return al.length ? `${N(x)} is also called “${esc(pick(al))}”` : `${N(x)} is ${F(x)}`; };
+    return qt('examName', t, `“<b>${esc(a)}</b>” is an alias of which mineral?`, esc(t.n), o.map(x=>esc(x.n)),
       `“${esc(a)}” is ${N(t)}${d ? `: ${esc(lc1(d))}` : ` (${F(t)})`}. The others don’t fit: ${listJoin(o.map(descr))}.`);
   },
   describe: textQ('describe','df', s=>`Which mineral matches this description? <span style="font-family:var(--f-body);font-size:.8em;display:block;margin-top:8px">“${s}”</span>`, 'diagnostic features'),
   uses: textQ('uses','us', s=>`Which mineral is this? <span style="font-family:var(--f-body);font-size:.8em;display:block;margin-top:8px">Uses / ore of: “${s}”</span>`, 'uses'),
-  ph: textQ('ph','ph', s=>`Which mineral has this Philippine occurrence? <span style="font-family:var(--f-body);font-size:.8em;display:block;margin-top:8px">“${s}”</span>`, 'Philippine occurrences'),
-  asked: textQ('asked','ask', s=>`The board asked about this angle. Which mineral was it? <span style="font-family:var(--f-body);font-size:.8em;display:block;margin-top:8px">“${s}”</span>`, 'exam angles'),
-  frequent(t){
-    const c = t.yrs.length; if (c < 2) return null;
-    const pool = shuffle(TM.filter(x=>x.yrs.length < c && x.yrs.length >= 1)); if (pool.length < 3) return null;
-    const o = pool.slice(0,3);
-    return qt('frequent', t, `Which of these has appeared in the <b>most exam years</b>?`, esc(t.n), o.map(x=>esc(x.n)),
-      `${N(t)} appeared in ${c} of the 8 exam years (${t.yrs.join(', ')}). ${listJoin(o.map(x=>`${N(x)} appeared in ${x.yrs.length} (${x.yrs.join(', ')})`))}.`);
-  },
-  year(t){
-    if (!t.yrs.length) return null;
-    const y = pick(t.yrs);
-    const o = shuffle(TM.filter(x=>x!==t && x.yrs.length && !x.yrs.includes(y))).slice(0,3); if (o.length<3) return null;
-    return qt('year', t, `Which of these minerals was named in the <b>${y}</b> board exam?`, esc(t.n), o.map(x=>esc(x.n)),
-      `${N(t)} appeared in ${t.yrs.join(', ')}. The others were not named in ${y}: ${listJoin(o.map(x=>`${N(x)} appeared in ${x.yrs.join(', ')}`))}.`);
-  },
-  specimen(t){
-    if (!t.hs) return null;
-    const o = owners(t, x=>x.n, TM.filter(x=>!x.hs), TO()); if (!o) return null;
-    return qt('specimen', t, `Which of these was given as a <b>hand specimen</b> in the rock and mineral ID part?`, esc(t.n), o.map(x=>esc(x.n)),
-      `${N(t)} was handed out as a specimen; know its look: ${esc(lc1(clip(t.df,80)))}. ${listJoin(o.map(N))} were named in written items only.`);
-  }
+  ph: textQ('ph','ph', s=>`Which mineral has this Philippine occurrence? <span style="font-family:var(--f-body);font-size:.8em;display:block;margin-top:8px">“${s}”</span>`, 'Philippine occurrences')
 };
 
 /* ----- Photo ID (both windows; listed only when photos exist) ----- */
@@ -1075,7 +1053,7 @@ function drawGridT(){
       ${HAS_PHOTOS ? photoFrame(m) : ''}
       <div class="spec-top">${chip(m.cls2)}${m.hs ? '<span class="badge">Hand specimen</span>' : `<span class="no">No. ${String(m.no).padStart(3,'0')}</span>`}</div>
       <h3>${esc(m.n)}</h3>
-      ${m.exn.length ? `<div class="aa xs-hide">Appeared as <b>${esc(m.exn.join(', '))}</b></div>` : ''}
+      ${m.exn.length ? `<div class="aa xs-hide">Aliases: <b>${esc(m.exn.join(', '))}</b></div>` : ''}
       <div class="fm">${fmtF(m.fm)}</div>
       <div class="xs-hide">${yrStrip(m)}</div>
       <div class="kv"><span>Exam years</span><b>${m.yrs.length} of 8</b></div>
@@ -1127,7 +1105,7 @@ function openSheet(col, name){
     ${photoBlock(m)}
     <div><h4>Exam years · ${m.yrs.length} of 8</h4>${yrStrip(m)}</div>
     <div class="asked"><h4>How it was asked</h4>${esc(m.ask || '—')}</div>
-    ${m.aa.length ? `<div><h4>Appeared in the exam as</h4>${m.aa.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>` : ''}
+    ${m.exn.length ? `<div><h4>Aliases</h4>${m.exn.map(a=>`<span class="tag">${esc(a)}</span>`).join('')}</div>` : ''}
     <div class="facts">
       <div><span>Entry type</span><b>${esc(m.et)}</b></div>
       <div><span>Group / structure</span><b>${esc(m.g)}</b></div>
